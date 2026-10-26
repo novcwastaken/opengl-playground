@@ -1,3 +1,4 @@
+#include <cmath>
 #include <glad/gl.h>
 #include <GLFW/glfw3.h>
 #include <iostream>
@@ -22,12 +23,12 @@ const char* fragment_shader_source = R"(
     in vec4 vertex_color;
     out vec4 frag_color;
 
-    //uniform vec4 meow_color;
+    uniform vec4 meow_color;
 
     void main() {
        //frag_color = vec4(72.0f/255, 167.0f/255, 240.0f/255, 1.0f);
-       frag_color = vertex_color;
-       //frag_color = meow_color;
+       //frag_color = vertex_color;
+       frag_color = meow_color;
     }
 )";
 
@@ -104,10 +105,9 @@ int main() {
 
     // Vertex data
     float rectangle_vertices[] = {
-        -0.5f, 0.5f, 0.0f,
-        0.5f, 0.5f, 0.0f,
-        0.5f, -0.5f, 0.0f,
-        -0.5f, -0.5f, 0.0f,
+        -0.5, -0.5, 0.0,
+        0.5, -0.5, 0.0,
+        0.0, 0.5, 0.0,
     };
 
     unsigned int rectangle_indexes[] = {
@@ -115,10 +115,10 @@ int main() {
     0, 3, 2,
     };
 
-     unsigned int VBO, VAO, EBO;
+     unsigned int VBO, VAO;
      glGenVertexArrays(1, &VAO);
      glGenBuffers(1, &VBO);
-     glGenBuffers(1, &EBO);
+     //glGenBuffers(1, &EBO);
 
     // Binding magic
     glBindVertexArray(VAO);
@@ -126,7 +126,7 @@ int main() {
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(rectangle_vertices), rectangle_vertices, GL_STATIC_DRAW);
 
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+    //glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(rectangle_indexes), rectangle_indexes, GL_STATIC_DRAW);
 
     // Link vertex attributes
@@ -140,6 +140,10 @@ int main() {
     // Polygon mode
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
+
+
+    glBindVertexArray(VAO);
+
     // Render loop
     while (!glfwWindowShouldClose(window)) {
         // Input
@@ -149,11 +153,16 @@ int main() {
         glClearColor(18.0/255, 19.0/255, 20.0/255, 1.0);
         glClear(GL_COLOR_BUFFER_BIT);
 
-        // Triangle -- Rectangle
+        // Triangle
+        float time = glfwGetTime();
+        float red_value = (std::sin(time) / 2.0) + 0.5;
+        int vertex_color_location = glGetUniformLocation(shader_program, "meow_color");
+
         glUseProgram(shader_program);
-        glBindVertexArray(VAO);
-        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-        //glBindVertexArray(0);
+        glUniform4f(vertex_color_location, red_value, 0.0, 0.0, 1.0);
+
+        glDrawArrays(GL_TRIANGLES, 0, 3);
+        //glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
         // Swap frame buffers, check & call events
         glfwSwapBuffers(window);
