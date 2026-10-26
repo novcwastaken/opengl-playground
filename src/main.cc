@@ -1,37 +1,10 @@
-#include <cmath>
 #include <glad/gl.h>
 #include <GLFW/glfw3.h>
 #include <iostream>
+#include "shader.hh"
 
 void process_input(GLFWwindow* window);
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
-
-const char* vertex_shader_source = R"(
-    #version 330 core
-    layout (location = 0) in vec3 aPos;
-    layout (location = 1) in vec3 aColor;
-
-    out vec3 vertex_color;
-
-    void main() {
-        gl_Position = vec4(aPos, 1.0);
-        vertex_color = aColor;
-    }
-)";
-
-const char* fragment_shader_source = R"(
-    #version 330 core
-    out vec4 frag_color;
-    in vec3 vertex_color;
-
-    //uniform vec4 meow_color;
-
-    void main() {
-       //frag_color = vec4(72.0f/255, 167.0f/255, 240.0f/255, 1.0f);
-       frag_color = vec4(vertex_color, 1.0f);
-       //frag_color = meow_color;
-    }
-)";
 
 int main() {
     glfwInit();
@@ -57,52 +30,8 @@ int main() {
         return -1;
     }
 
-    // Compile vertex shader
-    unsigned int vertex_shader = glCreateShader(GL_VERTEX_SHADER);
-    glShaderSource(vertex_shader, 1, &vertex_shader_source, NULL);
-    glCompileShader(vertex_shader);
-
-    int success;
-    char info_log[512];
-
-    glGetShaderiv(vertex_shader, GL_COMPILE_STATUS, &success);
-    if (success) {
-        std::cout << "Successfully compiled vertex shader!\n";
-    } else {
-        glGetShaderInfoLog(vertex_shader, 512, NULL, info_log);
-        std::cout << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n" << info_log << "\n";
-    }
-
-    // Compile fragment shader
-    unsigned int fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
-    glShaderSource(fragment_shader, 1, &fragment_shader_source, NULL);
-    glCompileShader(fragment_shader);
-
-    glGetShaderiv(fragment_shader, GL_COMPILE_STATUS, &success);
-    if (success) {
-        std::cout << "Successfully compiled fragment shader!\n";
-    } else {
-        glGetShaderInfoLog(fragment_shader, 512, NULL, info_log);
-        std::cout << "ERROR::SHADER::FRAGMENT::COMPILATION_FAILED\n" << info_log << "\n";
-    }
-
-    // Link shaders
-    unsigned int shader_program =  glCreateProgram();
-    glAttachShader(shader_program, vertex_shader);
-    glAttachShader(shader_program, fragment_shader);
-    glLinkProgram(shader_program);
-
-    glGetProgramiv(shader_program, GL_LINK_STATUS, &success);
-    if (success) {
-        std::cout << "Successfully linked shaders!\n";
-    } else {
-        glGetProgramInfoLog(shader_program, 512, NULL, info_log);
-        std::cout << "ERROR::SHADER::PROGRAM::LINKING_FAILED\n" << info_log << "\n";
-    }
-
-    // Cleanup
-    glDeleteShader(vertex_shader);
-    glDeleteShader(fragment_shader);
+    // Shaders
+    Shader shader("assets/shaders/vertex.vert", "assets/shaders/fragment.frag");
 
     // Vertex data
     float rectangle_vertices[] = {
@@ -159,7 +88,7 @@ int main() {
         // float red_value = (std::sin(time) / 2.0) + 0.5;
         // int vertex_color_location = glGetUniformLocation(shader_program, "meow_color");
 
-        glUseProgram(shader_program);
+        shader.use();
         //glUniform4f(vertex_color_location, red_value, 0.0, 0.0, 1.0);
 
         glDrawArrays(GL_TRIANGLES, 0, 3);
