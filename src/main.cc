@@ -9,26 +9,27 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 const char* vertex_shader_source = R"(
     #version 330 core
     layout (location = 0) in vec3 aPos;
+    layout (location = 1) in vec3 aColor;
 
-    out vec4 vertex_color;
+    out vec3 vertex_color;
 
     void main() {
-        gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);
-        vertex_color = vec4(0.0, 0.32, 0.32, 1.0);
+        gl_Position = vec4(aPos, 1.0);
+        vertex_color = aColor;
     }
 )";
 
 const char* fragment_shader_source = R"(
     #version 330 core
-    in vec4 vertex_color;
     out vec4 frag_color;
+    in vec3 vertex_color;
 
-    uniform vec4 meow_color;
+    //uniform vec4 meow_color;
 
     void main() {
        //frag_color = vec4(72.0f/255, 167.0f/255, 240.0f/255, 1.0f);
-       //frag_color = vertex_color;
-       frag_color = meow_color;
+       frag_color = vec4(vertex_color, 1.0f);
+       //frag_color = meow_color;
     }
 )";
 
@@ -105,15 +106,15 @@ int main() {
 
     // Vertex data
     float rectangle_vertices[] = {
-        -0.5, -0.5, 0.0,
-        0.5, -0.5, 0.0,
-        0.0, 0.5, 0.0,
+        -0.5, -0.5, 0.0,   0.0, 170.0/255, 1.0,
+         0.5, -0.5, 0.0,   11.0/255, 214.0/255, 11.0/255,
+         0.0,  0.5, 0.0,   230.0/255, 28.0/255, 28.0/255
     };
 
-    unsigned int rectangle_indexes[] = {
-        0, 1, 2,
-    0, 3, 2,
-    };
+    // unsigned int rectangle_indexes[] = {
+    //     0, 1, 2,
+    // 0, 3, 2,
+    // };
 
      unsigned int VBO, VAO;
      glGenVertexArrays(1, &VAO);
@@ -127,11 +128,13 @@ int main() {
     glBufferData(GL_ARRAY_BUFFER, sizeof(rectangle_vertices), rectangle_vertices, GL_STATIC_DRAW);
 
     //glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(rectangle_indexes), rectangle_indexes, GL_STATIC_DRAW);
+    //glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(rectangle_indexes), rectangle_indexes, GL_STATIC_DRAW);
 
     // Link vertex attributes
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
     glEnableVertexAttribArray(0);
+    glEnableVertexAttribArray(1);
 
     // Unbind
     glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -139,8 +142,6 @@ int main() {
 
     // Polygon mode
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-
-
 
     glBindVertexArray(VAO);
 
@@ -154,12 +155,12 @@ int main() {
         glClear(GL_COLOR_BUFFER_BIT);
 
         // Triangle
-        float time = glfwGetTime();
-        float red_value = (std::sin(time) / 2.0) + 0.5;
-        int vertex_color_location = glGetUniformLocation(shader_program, "meow_color");
+        // float time = glfwGetTime();
+        // float red_value = (std::sin(time) / 2.0) + 0.5;
+        // int vertex_color_location = glGetUniformLocation(shader_program, "meow_color");
 
         glUseProgram(shader_program);
-        glUniform4f(vertex_color_location, red_value, 0.0, 0.0, 1.0);
+        //glUniform4f(vertex_color_location, red_value, 0.0, 0.0, 1.0);
 
         glDrawArrays(GL_TRIANGLES, 0, 3);
         //glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
