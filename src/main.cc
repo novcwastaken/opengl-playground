@@ -1,7 +1,12 @@
 #include <glad/gl.h>
 #include <GLFW/glfw3.h>
+#include <glm/ext/matrix_float4x4.hpp>
 #include <iostream>
 #include "shader.hh"
+
+#include "glm/glm.hpp"
+#include "glm/gtc/matrix_transform.hpp"
+#include "glm/gtc/type_ptr.hpp"
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
@@ -118,9 +123,22 @@ int main() {
         glClearColor(0.0, 0.0, 0.0, 1.0);
         glClear(GL_COLOR_BUFFER_BIT);
 
+        glm::mat4 transformation(1.0f);
+
+        // Apply the rotation transformation to the `transformation` matrix (identity matrix by default)
+        // The rotation is 45 degrees (glm takes in radians), around the Z plane (unit vector)
+        transformation = glm::rotate(transformation, (float)glfwGetTime()*2, glm::vec3(1.0, 1.0, 0.0));
+        transformation = glm::rotate(transformation, (float)glfwGetTime()*4, glm::vec3(0.0, 1.0, 0.0));
+        transformation = glm::rotate(transformation, (float)glfwGetTime()*8, glm::vec3(0.0, 0.0, 1.0));
+        //transformation = glm::scale(transformation, glm::vec3(.5, .5, .5));
+
         // Rectangle
         glBindTexture(GL_TEXTURE_2D, texture);
         shader.use();
+
+        unsigned int transform_location = glGetUniformLocation(shader.program_id, "transformation");
+        glUniformMatrix4fv(transform_location, 1, GL_FALSE, glm::value_ptr(transformation));
+
         glBindVertexArray(VAO);
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
         //glDrawArrays(GL_TRIANGLES, 0, 3);
