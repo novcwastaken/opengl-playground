@@ -13,5 +13,5 @@ void main() {
    //frag_color = meow_color;
    //frag_color = vec4(vertex_color, 1.0f);
    //frag_color = vec4(vertex_pos, 1.0);
-   frag_color = texture(texture_object, texture_coord);
+   frag_color = texture(texture_object, texture_coord) * vec4(vertex_color, 1.0);
 }
