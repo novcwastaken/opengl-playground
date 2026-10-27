@@ -16,7 +16,7 @@ int main() {
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
     // Initialize the GLFW window
-    GLFWwindow* window = glfwCreateWindow(1280, 720, "OpenGL Playground", NULL, NULL);
+    GLFWwindow* window = glfwCreateWindow(720, 720, "OpenGL Playground", NULL, NULL);
     if (window == NULL) {
         std::cout << "Failed to create the GLFW window!\n";
         glfwTerminate();
@@ -37,11 +37,41 @@ int main() {
     Shader shader("assets/shaders/vertex.vert", "assets/shaders/fragment.frag");
 
     // Vertex data
-    float rectangle_vertices[] = {
-        -0.5, -0.5, 0.0,    0.0, 170.0/255, 1.0,              0.0, 0.0,
-         0.5, -0.5, 0.0,    11.0/255, 214.0/255, 11.0/255,    1.0, 0.0,
-         0.0,  0.5, 0.0,    230.0/255, 28.0/255, 28.0/255,    0.5, -1.0
+    float rectangle_vertices[] = { // Vertex XYZ -- vertex RGB -- tex ST
+        -0.5, -0.5, 0.0,    1.0, 0.0, 1.0,    0.0, 0.0, // Bottom left
+         0.5, -0.5, 0.0,    0.0, 0.0, 1.0,    1.0, 0.0, // Bottom right
+         0.5,  0.5, 0.0,    0.0, 1.0, 0.0,    1.0, 1.0, // Top right
+        -0.5,  0.5, 0.0,    1.0, 0.0, 0.0,    0.0, 1.0, // Top left
     };
+
+    unsigned int rectangle_indexes[] = {
+        0, 1, 2,
+        0, 2, 3
+    };
+
+    // Buffers
+    unsigned int VBO, VAO, EBO;
+    glGenVertexArrays(1, &VAO);
+    glGenBuffers(1, &VBO);
+    glGenBuffers(1, &EBO);
+
+    glBindVertexArray(VAO);
+
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(rectangle_vertices), rectangle_vertices, GL_STATIC_DRAW);
+
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(rectangle_indexes), rectangle_indexes, GL_STATIC_DRAW);
+
+    // Link vertex attributes
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0); // Position
+
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
+    glEnableVertexAttribArray(1); // Color
+
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
+    glEnableVertexAttribArray(2); // Texture coord
 
     // Texture
     unsigned int texture;
@@ -50,13 +80,17 @@ int main() {
 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
     int texture_w, texture_h, texture_channel_count;
-    unsigned char* texture_data = stbi_load("assets/textures/avatar.jpg", &texture_w, &texture_h, &texture_channel_count, 0);
+    stbi_set_flip_vertically_on_load(true);
+
+    unsigned char* texture_data = stbi_load("assets/textures/musicgato.png", &texture_w, &texture_h, &texture_channel_count, 0);
 
     if (texture_data) {
+        glPixelStorei(GL_UNPACK_ALIGNMENT, 1); // ily Claude
+
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, texture_w, texture_h, 0, GL_RGB, GL_UNSIGNED_BYTE, texture_data);
         glGenerateMipmap(GL_TEXTURE_2D);
     } else {
@@ -65,27 +99,8 @@ int main() {
 
     stbi_image_free(texture_data);
 
-     unsigned int VBO, VAO;
-     glGenVertexArrays(1, &VAO);
-     glGenBuffers(1, &VBO);
-     //glGenBuffers(1, &EBO);
-
-    // Binding magic
-    glBindVertexArray(VAO);
-
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(rectangle_vertices), rectangle_vertices, GL_STATIC_DRAW);
-
-    //glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-    //glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(rectangle_indexes), rectangle_indexes, GL_STATIC_DRAW);
-
-    // Link vertex attributes
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
-    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
-    glEnableVertexAttribArray(0);
-    glEnableVertexAttribArray(1);
-    glEnableVertexAttribArray(2);
+    // Use the shader
+    shader.use();
 
     // Unbind
     glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -100,21 +115,15 @@ int main() {
         process_input(window);
 
         // RENDERING COMMANDS
-        glClearColor(18.0/255, 19.0/255, 20.0/255, 1.0);
+        glClearColor(0.0, 0.0, 0.0, 1.0);
         glClear(GL_COLOR_BUFFER_BIT);
 
-        // Triangle
-        // float time = glfwGetTime();
-        // float red_value = (std::sin(time) / 2.0) + 0.5;
-        // int vertex_color_location = glGetUniformLocation(shader_program, "meow_color");
-
-        shader.use();
-        //glUniform4f(vertex_color_location, red_value, 0.0, 0.0, 1.0);
-
+        // Rectangle
         glBindTexture(GL_TEXTURE_2D, texture);
+        shader.use();
         glBindVertexArray(VAO);
-        glDrawArrays(GL_TRIANGLES, 0, 3);
-        //glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+        //glDrawArrays(GL_TRIANGLES, 0, 3);
 
         // Swap frame buffers, check & call events
         glfwSwapBuffers(window);
