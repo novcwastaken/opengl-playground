@@ -136,8 +136,7 @@ int main() {
         glBindTexture(GL_TEXTURE_2D, texture);
         shader.use();
 
-        unsigned int transform_location = glGetUniformLocation(shader.program_id, "transformation");
-        glUniformMatrix4fv(transform_location, 1, GL_FALSE, glm::value_ptr(transformation));
+        shader.set_mat4("transformation", transformation);
 
         glBindVertexArray(VAO);
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
