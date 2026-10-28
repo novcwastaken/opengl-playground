@@ -42,11 +42,19 @@ int main() {
     Shader shader("assets/shaders/vertex.vert", "assets/shaders/fragment.frag");
 
     // Vertex data
+    // float rectangle_vertices[] = { // Vertex XYZ -- vertex RGB -- tex ST
+    //     -0.5, -0.5, 0.0,    1.0, 0.0, 1.0,    0.0, 0.0, // Bottom left
+    //      0.5, -0.5, 0.0,    0.0, 0.0, 1.0,    1.0, 0.0, // Bottom right
+    //      0.5,  0.5, 0.0,    0.0, 1.0, 0.0,    1.0, 1.0, // Top right
+    //     -0.5,  0.5, 0.0,    1.0, 0.0, 0.0,    0.0, 1.0, // Top left
+    // };
+
+    // Aligned at top left
     float rectangle_vertices[] = { // Vertex XYZ -- vertex RGB -- tex ST
-        -0.5, -0.5, 0.0,    1.0, 0.0, 1.0,    0.0, 0.0, // Bottom left
-         0.5, -0.5, 0.0,    0.0, 0.0, 1.0,    1.0, 0.0, // Bottom right
-         0.5,  0.5, 0.0,    0.0, 1.0, 0.0,    1.0, 1.0, // Top right
-        -0.5,  0.5, 0.0,    1.0, 0.0, 0.0,    0.0, 1.0, // Top left
+        -1.0,  0.0, 0.0,    1.0, 0.0, 1.0,    0.0, 0.0, // Bottom left
+         0.0,  0.0, 0.0,    0.0, 0.0, 1.0,    1.0, 0.0, // Bottom right
+         0.0,  1.0, 0.0,    0.0, 1.0, 0.0,    1.0, 1.0, // Top right
+        -1.0,  1.0, 0.0,    1.0, 0.0, 0.0,    0.0, 1.0, // Top left
     };
 
     unsigned int rectangle_indexes[] = {
@@ -116,8 +124,15 @@ int main() {
 
     // Render loop
     while (!glfwWindowShouldClose(window)) {
+        double cursor_x, cursor_y;
+        int window_w, window_h;
+
         // Input
         process_input(window);
+        glfwGetCursorPos(window, &cursor_x, &cursor_y);
+        glfwGetWindowSize(window, &window_w, &window_h);
+
+        std::cout << "@@@ x = " << cursor_x << ", y = " << cursor_y << "\n";
 
         // RENDERING COMMANDS
         glClearColor(0.0, 0.0, 0.0, 1.0);
@@ -127,10 +142,14 @@ int main() {
 
         // Apply the rotation transformation to the `transformation` matrix (identity matrix by default)
         // The rotation is 45 degrees (glm takes in radians), around the Z plane (unit vector)
-        transformation = glm::rotate(transformation, (float)glfwGetTime()*2, glm::vec3(1.0, 1.0, 0.0));
-        transformation = glm::rotate(transformation, (float)glfwGetTime()*4, glm::vec3(0.0, 1.0, 0.0));
-        transformation = glm::rotate(transformation, (float)glfwGetTime()*8, glm::vec3(0.0, 0.0, 1.0));
-        //transformation = glm::scale(transformation, glm::vec3(.5, .5, .5));
+        // transformation = glm::rotate(transformation, (float)glfwGetTime()*2, glm::vec3(1.0, 1.0, 0.0));
+        // transformation = glm::rotate(transformation, (float)glfwGetTime()*4, glm::vec3(0.0, 1.0, 0.0));
+        // transformation = glm::rotate(transformation, (float)glfwGetTime()*8, glm::vec3(0.0, 0.0, 1.0));
+
+        //transformation = glm::translate(transformation, glm::vec3(1, -1, 0));
+
+        transformation = glm::translate(transformation, glm::vec3(cursor_x/window_w*2, -(cursor_y/window_h)*2, 0));
+
 
         // Rectangle
         glBindTexture(GL_TEXTURE_2D, texture);
