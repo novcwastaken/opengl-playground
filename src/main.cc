@@ -161,6 +161,13 @@ int main() {
     // Polygon mode
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
+    std::vector<glm::vec3> cube_positions = {
+        glm::vec3(0.0f, 0.0f, -3.0f),
+
+        glm::vec3(-1.5f, 0.0f, -3.0f),
+        glm::vec3(1.5f, 0.0f, -3.0f),
+    };
+
     // Render loop
     while (!glfwWindowShouldClose(window)) {
         double cursor_x, cursor_y;
@@ -175,26 +182,34 @@ int main() {
         glClearColor(0.0, 0.0, 0.0, 1.0);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        // Transformations
-        glm::mat4 model      = glm::mat4(1.0f);
-        glm::mat4 view       = glm::mat4(1.0f);
-        glm::mat4 projection = glm::mat4(1.0f);
-
-        model      = glm::rotate(model, (float)glfwGetTime() * glm::radians(70.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-        view       = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
-        projection = glm::perspective(glm::radians(45.0f), (float)window_w / (float)window_h, 0.1f, 100.0f);
-
-        // Rectangle
+        // Cube
         glBindTexture(GL_TEXTURE_2D, texture);
         shader.use();
 
-        shader.set_mat4("model", model);
-        shader.set_mat4("view", view);
+        // Transformations
+        glm::mat4 view = glm::mat4(1.0f);
+        glm::mat4 projection = glm::mat4(1.0f);
+
+        projection = glm::perspective(glm::radians(45.0f), (float)window_w / (float)window_h, 0.1f, 100.0f);
+        view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
+
         shader.set_mat4("projection", projection);
+        shader.set_mat4("view", view);
 
         glBindVertexArray(VAO);
-        //glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-        glDrawArrays(GL_TRIANGLES, 0, 36);
+        for (size_t i = 0; i < cube_positions.size(); i++) {
+            //model = glm::rotate(model, glm::radians(20.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+            glm::mat4 model = glm::mat4(1.0f);
+            model = glm::translate(model, cube_positions[i]);
+            model = glm::rotate(model, glm::radians(45.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+
+            // Spin
+            model = glm::rotate(model, (float)glfwGetTime() * glm::radians(-120.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+
+            shader.set_mat4("model", model);
+
+            glDrawArrays(GL_TRIANGLES, 0, 36);
+        }
 
         // Swap frame buffers, check & call events
         glfwSwapBuffers(window);
