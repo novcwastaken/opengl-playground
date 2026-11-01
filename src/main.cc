@@ -38,8 +38,11 @@ int main() {
         return -1;
     }
 
-    // Shaders
+    // Shader
     Shader shader("assets/shaders/vertex.vert", "assets/shaders/fragment.frag");
+
+    // Depth buffer
+    glEnable(GL_DEPTH_TEST);
 
     // float vertices[] = { // Vertex XYZ -- vertex RGB -- tex ST
     //     -0.5, -0.5, 0.0,    1.0, 0.0, 1.0,    0.0, 0.0, // Bottom left
@@ -170,16 +173,15 @@ int main() {
 
         // RENDERING COMMANDS
         glClearColor(0.0, 0.0, 0.0, 1.0);
-        glClear(GL_COLOR_BUFFER_BIT);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        glm::mat4 model = glm::mat4(1.0f);
-        //model = glm::rotate(model, glm::radians(-45.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-        model = glm::rotate(model, (float)glfwGetTime() * glm::radians(70.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+        // Transformations
+        glm::mat4 model      = glm::mat4(1.0f);
+        glm::mat4 view       = glm::mat4(1.0f);
+        glm::mat4 projection = glm::mat4(1.0f);
 
-        glm::mat4 view = glm::mat4(1.0f);
-        view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
-
-        glm::mat4 projection;
+        model      = glm::rotate(model, (float)glfwGetTime() * glm::radians(70.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+        view       = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
         projection = glm::perspective(glm::radians(45.0f), (float)window_w / (float)window_h, 0.1f, 100.0f);
 
         // Rectangle
