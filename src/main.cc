@@ -168,6 +168,15 @@ int main() {
         glm::vec3(1.5f, 0.0f, -3.0f),
     };
 
+    glm::vec3 camera_position = glm::vec3(0.0f, 0.0f, 3.0f);
+    glm::vec3 camera_target = glm::vec3(0.0f, 0.0f, 0.0f); // Look at the origin
+    glm::vec3 camera_direction = glm::normalize(camera_position - camera_target); // Direction is not the best name here, as the vector is pointing in the opposite direction
+
+    glm::vec3 global_up = glm::vec3(0.0f, 1.0f, 0.0f);
+    glm::vec3 camera_right = glm::normalize(glm::cross(global_up, camera_direction));
+
+    glm::vec3 camera_up = glm::cross(camera_direction, camera_right);
+
     // Render loop
     while (!glfwWindowShouldClose(window)) {
         double cursor_x, cursor_y;
@@ -191,20 +200,25 @@ int main() {
         glm::mat4 projection = glm::mat4(1.0f);
 
         projection = glm::perspective(glm::radians(45.0f), (float)window_w / (float)window_h, 0.1f, 100.0f);
-        view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
+        //view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
 
         shader.set_mat4("projection", projection);
         shader.set_mat4("view", view);
 
         glBindVertexArray(VAO);
         for (size_t i = 0; i < cube_positions.size(); i++) {
-            //model = glm::rotate(model, glm::radians(20.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+            const float radius = 10.0f;
+            float camera_x = sin(glfwGetTime()) * radius;
+            float camera_z = cos(glfwGetTime()) * radius;
+
             glm::mat4 model = glm::mat4(1.0f);
             model = glm::translate(model, cube_positions[i]);
             model = glm::rotate(model, glm::radians(45.0f), glm::vec3(1.0f, 0.0f, 0.0f));
 
             // Spin
             model = glm::rotate(model, (float)glfwGetTime() * glm::radians(-120.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+
+            view = glm::lookAt(glm::vec3(camera_x, 0.0, camera_z), glm::vec3(0.0, 0.0, 0.0), glm::vec3(0.0, 1.0, 0.0));
 
             shader.set_mat4("model", model);
 
